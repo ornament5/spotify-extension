@@ -1,0 +1,19 @@
+{
+  "name": "Spotify Extension",
+  "description": "Extend the functionality of the Spotify web app",
+  "version": "1.0",
+  "permissions": ["declarativeContent", "activeTab", "tabs"],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "content_scripts": [{
+    "matches": ["https://open.spotify.com/*"],
+    "js": ["extensionLogic.js","listDuration.js"]
+  }
+],
+  "page_action": {
+    "default_popup": "popup.html"
+  },
+  "manifest_version": 2
+}
