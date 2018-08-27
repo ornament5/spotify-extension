@@ -14,19 +14,6 @@ chrome.runtime.onMessage.addListener(
 
 
 
-// ---------------------------- Body Click pokusaj
-// window.onload = totalDuration;
-// let body = document.body;
-// body.addEventListener(`click`,function(e){
-//     if(e.target.href && /album|playlist/.test(e.target.href)) {
-//         setTimeout(() => {
-//             console.log(`aaaaaaaaaaaaaaaaaaaaaa`);
-//             totalDuration();
-//         },2000);
-//     }
-// });
-
-
 function totalDuration() {
 
     let myFunctions = {

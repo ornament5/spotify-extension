@@ -13,12 +13,12 @@
 3. ------ DONE ------- izvlaci i cuva token iz url-a, i njegovo vreme trajanja u local storage-u - DONE
                             metode:
                                 extractTokenInfo("https://example.com/callback#access_token=NwAExz...BV3O2Tk&token_type=Bearer&expires_in=3600")
-                                store(name, data) 
+                               appStorage.set(name, data) 
 
 4. ------ DONE ------- skuplja id-jeve plejlisti, koji se nalaze u a.mo-info-name elementu, u objekat i cuva u Local Storage key = playlist id, value = null 
                             metode: 
                                 getPlaylistIds(HTMLCollection)
-                                store(name, data)
+                               appStorage.set(name, data)
 
 5. ------ DONE ------- salje Get Single Playlist`s Tracks request
                              metode:
@@ -63,19 +63,19 @@ chrome.runtime.onMessage.addListener(
 function handler() {
   if (window.location.href.includes("https://open.spotify.com/collection/playlists")) {
     setTimeout(() => go(), 500); // Zasto Timeout? Ako se direktno otvori stranica sa plejlistama, prvi put ne stigne da pokupi podatke pa bude NaNh:NaNm:NaNs 
-    } 
+  }
 }
 
 /* Main function that inserts each playlist's duration if the token is still valid OR 
    requests & stores a new token, if the current one is expired, and subsequently inserts total durations
 */
 function go() {
-  if (isStored(`token`) && !isExpired(getFromStorage(`token`).expires)) {
+  if (hasActiveToken()) {
     takeCareOfBusiness();
   } else {
     if (window.location.href.includes(`access_token`)) {
       let token = extractTokenInfo(window.location.href);
-      store(`token`, token);
+      appStorage.set(`token`, token);
       takeCareOfBusiness();
     } else {
       requestToken();
@@ -99,7 +99,7 @@ function isExpired(expirationTime) {
   return Date.now() + 1000 > expirationTime;
 }
 
-function extractTokenInfo(urlString) {
+function extractToken(urlString) {
   let tokenId = urlString.match(/access_token=(.+?)&/) ? urlString.match(/access_token=(.+?)&/)[1] : null,
     tokenDuration = urlString.match(/expires_in=(.+?)$/) ? urlString.match(/expires_in=(.+?)$/)[1] : null,
     expirationTime = tokenDuration ? Date.now() + Number(tokenDuration) * 1000 : 0;
@@ -109,22 +109,22 @@ function extractTokenInfo(urlString) {
   }
 }
 
+function hasActiveToken() {
+  return appStorage.get(`token`) && !isExpired(appStorage.get(`token`).expires);
+}
+
 // -----------------Storage Util Functions--------------- //
-function store(name, data) {
-  localStorage.setItem(name, JSON.stringify(data));
-}
-
-function getFromStorage(name) {
-  if (!isStored(name)) {
-    return null;
+const appStorage = {
+  set(name, data) {
+    localStorage.setItem(name, JSON.stringify(data));
+  },
+  get(name) {
+    if (!localStorage.getItem(name)) {
+      return null;
+    }
+    let storedData = localStorage.getItem(name);
+    return JSON.parse(storedData);
   }
-  let storedData = localStorage.getItem(name);
-  return JSON.parse(storedData);
-}
-
-function isStored(key) {
-  if (localStorage.getItem(key)) return true;
-  return false;
 }
 
 // -----------------Time Util Functions--------------- //
@@ -165,7 +165,7 @@ function getAllPlaylistIds(playlistsCollection) {
 function storeAllPlaylistIds() {
   let playlistsCollection = document.querySelectorAll(".mo-info-name"),
     playlistsData = getAllPlaylistIds(playlistsCollection);
-  store("playlists", playlistsData);
+  appStorage.set("playlists", playlistsData);
 }
 
 // -----------------Playlist Duration Functions with Spotify API calls--------------- //
@@ -183,23 +183,23 @@ function getSinglePlaylistDuration(playlistId, accessToken) {
 }
 
 function getAllPlaylistDurations() {
-  let token = getFromStorage("token").id,
-    allPlaylistIds = Object.keys(getFromStorage("playlists"));
+  let token = appStorage.get("token").id,
+    allPlaylistIds = Object.keys(appStorage.get("playlists"));
   for (let playlistId of allPlaylistIds) {
     getSinglePlaylistDuration(playlistId, token);
   }
 }
 
 function storeSinglePlaylistDuration(playlistId, tracks) {
-  let storedPlaylists = getFromStorage("playlists");
+  let storedPlaylists = appStorage.get("playlists");
   storedPlaylists[playlistId] = trackTimeAdderInSeconds(tracks);
-  store("playlists", storedPlaylists);
+  appStorage.set("playlists", storedPlaylists);
 }
 
 // -----------------Insert playlist duration HTML functions--------------- //
 function insertSinglePlaylistDuration(playlistNode) {
   let playlistId = getSinglePlaylistId(playlistNode),
-    playlistDuration = getFromStorage(`playlists`)[playlistId],
+    playlistDuration = appStorage.get(`playlists`)[playlistId],
     playlistDurationFormatted = timeFormatter(playlistDuration);
   playlistNode.insertAdjacentHTML(`afterend`, `<p>${playlistDurationFormatted}</p>`);
 
