@@ -74,7 +74,7 @@ function go() {
     takeCareOfBusiness();
   } else {
     if (window.location.href.includes(`access_token`)) {
-      let token = extractTokenInfo(window.location.href);
+      let token = extractToken(window.location.href);
       appStorage.set(`token`, token);
       takeCareOfBusiness();
     } else {
