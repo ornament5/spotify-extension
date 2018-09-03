@@ -9,12 +9,11 @@ chrome.runtime.onInstalled.addListener(function () {
             actions: [ new chrome.declarativeContent.ShowPageAction() ]
        }]);
     });
-
-    chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
-        if (changeInfo.status === `complete`) {
-            chrome.tabs.sendMessage(tabId, {
-                message: `done`
-            });
-        }
-    });
+});
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
+    if (changeInfo.status === `complete`) {
+        chrome.tabs.sendMessage(tabId, {
+            message: `done`
+        });
+    }
 });
