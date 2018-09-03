@@ -1,62 +1,55 @@
-window.addEventListener(`load`, function () {
-    console.log(`window loaded`);
-    checkUrlAndDomAndRun();
-});
+(function () {
+    window.addEventListener(`load`, init);
+    chrome.runtime.onMessage.addListener(request => {
+            if (request.message === `done`) {
+                init();
+            }
+        });
 
-chrome.runtime.onMessage.addListener(
-    function (request) {
-        // listen for messages sent from background.js
-        if (request.message === `done`) {
-            console.log(`tab updated`);
-            checkUrlAndDomAndRun();
-        }
-    });
+    const utility = {
+            timeAdder(totalTimeInSecs, timeInDisplayFormat) {
+                const singleTimeInSecs = timeInDisplayFormat.split(`:`).reduce((mins, secs) => Number(mins) * 60 + Number(secs));
+                return totalTimeInSecs + singleTimeInSecs;
+            },
+            generateDisplayDuration(timeInSecs) {
+                const hours = Math.floor(timeInSecs / 3600),
+                    mins = Math.floor((timeInSecs - hours * 3600) / 60),
+                    secs = timeInSecs - (hours * 3600) - (mins * 60);
 
+                const displayHours = `${this.padWithZero(hours)}h`,
+                    displayMins = `${this.padWithZero(mins)}m`,
+                    displaySecs = `${this.padWithZero(secs)}s`;
 
-const utility = {
-        timeAdder(totalTimeSecs, singleTime) {
-            let singleTimeSecs = singleTime.split(`:`).reduce((m, s) => Number(m) * 60 + Number(s));
-            totalTimeSecs += singleTimeSecs;
-            return totalTimeSecs;
-        },
-        timeFormatter(timeInSecs) {
-            let hours = Math.floor(timeInSecs / 3600),
-                mins = Math.floor((timeInSecs - hours * 3600) / 60),
-                secs = timeInSecs - (hours * 3600) - (mins * 60);
-
-            let hoursString = hours < 10 ? `0` + hours : `` + hours,
-                minsString = mins < 10 ? `0` + mins : `` + mins,
-                secsString = secs < 10 ? `0` + secs : `` + secs;
-
-            return hoursString + `h:` + minsString + `m:` + secsString + `s`;
-        }
+                return `${displayHours}:${displayMins}:${displaySecs}`;
+            },
+            padWithZero(timeUnit){
+                return timeUnit < 10 ? `0${timeUnit}`: `${timeUnit}`;
+            },
+            isDomReady(){
+                return document.querySelector(`.text-silence`) && document.querySelectorAll(`.tracklist-duration span`).length;
+            },
+            isPathnameSuitable(regexp) {
+                return regexp.test(window.location.pathname);
+            }
     };
 
-
-function renderTotalDuration() {
-
-    let trackDurations = document.querySelectorAll(`.tracklist-duration span`),
-    durationArr = [];
-    for (let track of trackDurations) {
-        durationArr.push(track.textContent);
-    }
-
-    let totalDurationInSecs = durationArr.reduce(utility.timeAdder, 0),
-        durationText = `Total duration: ` + utility.timeFormatter(totalDurationInSecs),
-        durationPara = document.getElementById(`extension-list-duration`) || document.createElement(`p`),
-        numberOfSongs = document.querySelector(`.text-silence`);
-
-    durationPara.id = durationPara.id || `extension-list-duration`;
-    durationPara.textContent = durationText;
-    numberOfSongs.after(durationPara);
-}
-
-function checkUrlAndDomAndRun() {
-    if (/show|album|(playlist\b)/.test(window.location.pathname)) {
-        if (!document.querySelector(`.text-silence`) || document.querySelectorAll(`.tracklist-duration span`).length == 0) {
-            setTimeout(checkUrlAndDomAndRun, 0);
-            return;
+    function renderTotalDuration() {
+        const trackDurations = document.querySelectorAll(`.tracklist-duration span`),
+        durationArr = [];
+        for (let track of trackDurations) {
+            durationArr.push(track.textContent);
         }
-        renderTotalDuration();
+        const totalDurationInSecs = durationArr.reduce(utility.timeAdder, 0),
+            durationText = `Total duration: ${utility.generateDisplayDuration(totalDurationInSecs)}`,
+            durationParagraph = document.getElementById(`extension-list-duration`) || document.createElement(`p`);
+        durationParagraph.id = durationParagraph.id || `extension-list-duration`;
+        durationParagraph.textContent = durationText;
+        document.querySelector(`.text-silence`).after(durationParagraph);
     }
-}
+
+    function init() {
+        utility.isPathnameSuitable(/show|album|(playlist\b)/) && utility.isDomReady() ? 
+        renderTotalDuration() :
+        setTimeout(init, 0);
+        }
+})();
