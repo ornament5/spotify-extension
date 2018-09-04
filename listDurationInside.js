@@ -7,9 +7,8 @@
         });
 
     const utility = {
-            timeAdder(totalTimeInSecs, timeInDisplayFormat) {
-                const singleTimeInSecs = timeInDisplayFormat.split(`:`).reduce((mins, secs) => Number(mins) * 60 + Number(secs));
-                return totalTimeInSecs + singleTimeInSecs;
+            extractDuration(durationInDisplayFormat) {
+                return durationInDisplayFormat.split(`:`).reduce((mins, secs) => Number(mins) * 60 + Number(secs));
             },
             generateDisplayDuration(timeInSecs) {
                 const hours = Math.floor(timeInSecs / 3600),
@@ -39,7 +38,7 @@
         for (let track of trackDurations) {
             durationArr.push(track.textContent);
         }
-        const totalDurationInSecs = durationArr.reduce(utility.timeAdder, 0),
+        const totalDurationInSecs = durationArr.reduce((total, single) => total + utility.extractDuration(single), 0),
             durationText = `Total duration: ${utility.generateDisplayDuration(totalDurationInSecs)}`,
             durationParagraph = document.getElementById(`extension-list-duration`) || document.createElement(`p`);
         durationParagraph.id = durationParagraph.id || `extension-list-duration`;
