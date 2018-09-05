@@ -3,9 +3,8 @@
     chrome.runtime.onMessage.addListener(request => request.message === 'done' && init());
     
     const utility = {
-            extractDuration(totalTimeInSecs, timeInDisplayFormat) {
-                const singleTimeInSecs = timeInDisplayFormat.split(':').reduce((mins, secs) => Number(mins) * 60 + Number(secs));
-                return totalTimeInSecs + singleTimeInSecs;
+            extractDuration(durationInDisplayFormat) {
+                return durationInDisplayFormat.split(`:`).reduce((mins, secs) => Number(mins) * 60 + Number(secs));
             },
             generateDurationInDisplayFormat(timeInSecs) {
                 const hours = Math.floor(timeInSecs / 3600),
@@ -35,10 +34,10 @@
         for (const track of trackDurationNodes) {
             trackDurations.push(track.textContent);
         }
-        const totalDurationInSecs = trackDurations.reduce(utility.extractDuration, 0),
-            durationText = `Total duration: ${utility.generateDurationInDisplayFormat(totalDurationInSecs)}`,
-            durationParagraph = document.getElementById('extension-list-duration') || document.createElement('p');
-        durationParagraph.id = durationParagraph.id || 'extension-list-duration';
+        const totalDurationInSecs = durationArr.reduce((total, single) => total + utility.extractDuration(single), 0),
+            durationText = `Total duration: ${utility.generateDisplayDuration(totalDurationInSecs)}`,
+            durationParagraph = document.getElementById(`extension-list-duration`) || document.createElement(`p`);
+        durationParagraph.id = durationParagraph.id || `extension-list-duration`;
         durationParagraph.textContent = durationText;
         document.querySelector('.text-silence').after(durationParagraph);
     }
