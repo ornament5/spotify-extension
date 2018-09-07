@@ -34,8 +34,8 @@
         for (const track of trackDurationNodes) {
             trackDurations.push(track.textContent);
         }
-        const totalDurationInSecs = durationArr.reduce((total, single) => total + utility.extractDuration(single), 0),
-            durationText = `Total duration: ${utility.generateDisplayDuration(totalDurationInSecs)}`,
+        const totalDurationInSecs = trackDurations.reduce((total, single) => total + utility.extractDuration(single), 0),
+            durationText = `Total duration: ${utility.generateDurationInDisplayFormat(totalDurationInSecs)}`,
             durationParagraph = document.getElementById(`extension-list-duration`) || document.createElement(`p`);
         durationParagraph.id = durationParagraph.id || `extension-list-duration`;
         durationParagraph.textContent = durationText;
