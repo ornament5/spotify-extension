@@ -1,5 +1,5 @@
-chrome.runtime.onInstalled.addListener(function () {
-    chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+chrome.runtime.onInstalled.addListener(() =>{
+    chrome.declarativeContent.onPageChanged.removeRules(undefined, () =>{
         chrome.declarativeContent.onPageChanged.addRules([{
             conditions: [
                 new chrome.declarativeContent.PageStateMatcher({
@@ -9,12 +9,6 @@ chrome.runtime.onInstalled.addListener(function () {
             actions: [ new chrome.declarativeContent.ShowPageAction() ]
        }]);
     });
-
-    chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
-        if (changeInfo.status === `complete`) {
-            chrome.tabs.sendMessage(tabId, {
-                message: `done`
-            });
-        }
-    });
 });
+chrome.tabs.onUpdated.addListener((tabId, change) => change.status === `complete` &&
+        chrome.tabs.sendMessage(tabId, { message: `done` }));
