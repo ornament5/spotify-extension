@@ -1,12 +1,22 @@
-let getTotalDuration = document.getElementById(`getTotalDuration`);
+const getTotalDuration = document.getElementById('total-duration');
+const saveDiscoverWeekly = document.getElementById('discover-weekly');
 
-getTotalDuration.addEventListener(`click`, function (element) {
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+getTotalDuration.addEventListener('click', element => {
+      chrome.tabs.query({active: true, currentWindow: true}, tabs => {
       chrome.tabs.executeScript(
           tabs[0].id,
-          {code: `dispatchEvent(new Event('duration'));` }
+          {code: 'dispatchEvent(new CustomEvent(`duration`));'}
       );
     });
   });
+
+  saveDiscoverWeekly.addEventListener('click', element => {
+    chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+    chrome.tabs.executeScript(
+        tabs[0].id,
+        {file: 'saveDiscoverWeeklyList.js'}
+    );
+  });
+});
 
 

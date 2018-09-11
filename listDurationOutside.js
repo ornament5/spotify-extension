@@ -1,14 +1,14 @@
 (function () {
-	window.addEventListener('duration', handler);
-	window.addEventListener('load', handler);
-	chrome.runtime.onMessage.addListener(request => request.message === 'done' && handler());
+	window.addEventListener('duration', init);
+	window.addEventListener('load', init);
+	chrome.runtime.onMessage.addListener(request => request.message === 'done' && init());
 
-	function handler() {
-		return utility.urlIncludes('https://open.spotify.com/collection/playlists') && setTimeout(() => extension.init(), 200);
+	function init() {
+		return utility.urlIncludes('https://open.spotify.com/collection/playlists') && setTimeout(() => extension.runWithTokenCheck(), 200);
 	}
 
 	const extension = {
-		init() {
+		runWithTokenCheck() {
 			if (token.isActive()) {
 				this.displayDuration();
 			} else {
@@ -33,7 +33,7 @@
 
 	const token = {
 		request() {
-			const requestURL = 'https://accounts.spotify.com/authorize?client_id=4033df41b69c46598a007e72e87448a1&redirect_uri=https://open.spotify.com/collection/playlists&scope=playlist-read-private%20playlist-read-collaborative&response_type=token'
+			const requestURL = 'https://accounts.spotify.com/authorize?client_id=4033df41b69c46598a007e72e87448a1&redirect_uri=https://open.spotify.com/collection/playlists&scope=playlist-read-private%20playlist-read-collaborative%20playlist-modify-public%20playlist-modify-private&response_type=token'
 			window.location.href = requestURL;
 		},
 		extract(urlString) {
