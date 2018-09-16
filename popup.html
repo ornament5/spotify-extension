@@ -20,29 +20,33 @@
 		}
 
 		button {
-			height: 30px;
-			width: 30px;
+			height:60px;
+			width: 60px;
 			outline: none;
+			border-radius: 50%;
+			color:black;
+			font-weight: 600;
+			font-size: 1.4rem;
+			border:4px solid black;
+			background-color: transparent;
 		}
 
-		#total-duration {
-			background-color: #1db954;
+		button:hover, button:focus, button:active{
+			color:white;
+			background-color: black;
 		}
 
-		#discover-weekly {
-			background-color: #3E4B5E;
-		}
 	</style>
 </head>
 
 <body>
 	<div>
 		<p>Get total duration for each of your playlists!</p>
-		<button id="total-duration"></button>
+		<button id="total-duration">TD</button>
 	</div>
 	<div>
 		<p>Save your current Discover Weekly playlist!</p>
-		<button id="discover-weekly"></button>
+		<button id="discover-weekly">DW</button>
 	</div>
 	<script src="popup.js"></script>
 </body>

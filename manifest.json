@@ -9,7 +9,7 @@
   },
   "content_scripts": [{
     "matches": ["https://open.spotify.com/*"],
-    "js": ["listDurationInside.js","listDurationOutside.js"]
+    "js": ["listDurationInside.js","listDurationOutside.js","saveDiscoverWeekly.js"]
   }
 ],
   "page_action": {

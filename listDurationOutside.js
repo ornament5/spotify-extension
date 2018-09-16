@@ -1,27 +1,27 @@
 (function () {
 	window.addEventListener('duration', init);
 	window.addEventListener('load', init);
-	chrome.runtime.onMessage.addListener(request => request.message === 'done' && init());
+	chrome.runtime.onMessage.addListener(request => request.message === 'tabUpdated' && init());
 
 	function init() {
-		return utility.urlIncludes('https://open.spotify.com/collection/playlists') && setTimeout(() => extension.runWithTokenCheck(), 200);
+		return utility.urlIncludes('https://open.spotify.com/collection/playlists') && setTimeout(() => duration.runWithTokenCheck(), 200);
 	}
 
-	const extension = {
+	const duration = {
 		runWithTokenCheck() {
 			if (token.isActive()) {
-				this.displayDuration();
+				this.display();
 			} else {
 				if (utility.urlIncludes('access_token')) {
 					const tokenObject = token.extract(window.location.href);
 					token.setToStorage(tokenObject);
-					this.displayDuration();
+					this.display();
 				} else {
 					token.request();
 				}
 			}
 		},
-		displayDuration() {
+		display() {
 			const playlistsCollection = document.querySelectorAll('.mo-info-name');
 			const accessToken = token.getFromStorage().id;
 			for (const singlePlaylist of playlistsCollection) {
@@ -111,7 +111,7 @@
 		},
 		renderDuration(playlistDuration, playlistNode) {
 			const playlistDurationFormatted = utility.generateDurationInDisplayFormat(playlistDuration);
-			playlistNode.insertAdjacentHTML('afterend', `<p class='extension-list-duration'>${playlistDurationFormatted}</p>`);
+			playlistNode.insertAdjacentHTML('afterend', `<p class='duration-list-duration'>${playlistDurationFormatted}</p>`);
 		},
 	};
 })();
