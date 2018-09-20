@@ -144,7 +144,7 @@
                 .then(() => http.get('https://api.spotify.com/v1/me')) // Get the current user
                 .then(playlist.create)
                 .then(playlist.addTracks)
-                .catch(error => console.log(error.message));
+                .catch(error => infoToaster.show(error.message));
         },
         getTracksEndpoint(playlists) {
             const discoverPlaylist = playlists.items.filter(playlist => playlist.name === 'Discover Weekly')[0];
@@ -161,23 +161,38 @@
     const infoToaster = {
         create(text) {
             const container = document.createElement('div');
-            const message = document.createElement('p');
-            const close = document.createElement('span');
-
-            message.textContent = text;
-            container.append(message, close);
-
+            container.insertAdjacentHTML(`afterbegin`,`<p>${text}</p>`);
             return container;
         },
-        display(text) {
+        addStyles(toasterContainer) {
+            const containerStyles = `width:15rem;
+                                    height:4rem;
+                                    position:fixed;
+                                    top:20vh;
+                                    right:-50vw;
+                                    box-sizing:border-box;
+                                    font:12px Arial,Helvetica,sans-serif;
+                                    color:white;
+                                    padding:0.6em;
+                                    background:linear-gradient(#00d2ff 0%,#3a7bd5 100%);
+                                    transition:right 1.5s cubic-bezier(0.68,-0.55,0.27,1.55);`; 
+            const paragraphStyles = `margin:0 auto;
+                                    position:absolute;
+                                    top:50%;
+                                    transform:translateY(-50%);`;
 
+          toasterContainer.setAttribute('style', containerStyles);
+          toasterContainer.firstElementChild.setAttribute('style', paragraphStyles);
+          return toasterContainer;
         },
-        addInitialStyles(toasterContainer) {
-            toasterContainer.style.position = 'absolute';
-            toasterContainer.style.right = '-500px';
-            toasterContainer.style.top = '0px';
-        }
+        show(text) {
+            const toaster = this.addStyles(this.create(text));
+            const body = document.body;
+            body.appendChild(toaster);
+            
+            setTimeout(() => toaster.style.right = '1.5vw', 0);
+            setTimeout(() => toaster.style.right = '-50vw', 3000);
+        },
     };
-
-
 }());
+
