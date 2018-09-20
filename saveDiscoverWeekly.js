@@ -1,5 +1,4 @@
 (function () {
-
     window.addEventListener('discover', init);
     window.addEventListener('load', init);
 
@@ -41,9 +40,49 @@
             const msInWeek = 1000 * 60 * 60 * 24 * 7;
             return Math.ceil((now - yearStart) / msInWeek);
         }
+    };
 
-
-    }
+    const http = {
+        get(url) {
+            const accessToken = token.getFromStorage().id;
+            return new Promise(function (resolve, reject) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url);
+                xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+                xhr.onload = function () {
+                    if (xhr.status == 200) {
+                        resolve(JSON.parse(xhr.response));
+                    } else {
+                        reject(new Error(xhr.statusText));
+                    }
+                };
+                xhr.onerror = function () {
+                    reject(new Error("Network Error - please try again"));
+                };
+                xhr.send();
+            });
+        },
+        post(url, requestBody) {
+            const accessToken = token.getFromStorage().id;
+            return new Promise(function (resolve, reject) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url);
+                xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload = function () {
+                    if (xhr.status == 200 || xhr.status == 201) {
+                        resolve(JSON.parse(xhr.response));
+                    } else {
+                        reject(new Error(xhr.statusText));
+                    }
+                };
+                xhr.onerror = function () {
+                    reject(new Error('Network Error - please try again'));
+                };
+                xhr.send(JSON.stringify(requestBody));
+            });
+        }
+    };
 
     const token = {
         request() {
@@ -76,81 +115,69 @@
         }
     };
 
+    const playlist = {
+        create(user) {
+            const currentUsersId = user.id;
+            const currentWeek = util.getCurrentWeek();
+            const options = {
+                name: `My Discover Weekly - Week ${currentWeek}`,
+                public: false
+            };
+            return http.post(`https://api.spotify.com/v1/users/${currentUsersId}/playlists`, options);
+        },
+        addTracks(playlist) {
+            const playlistId = playlist.id;
+            http.post(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, this.trackUris);
+            window.location.reload(true);
+        },
+        getTrackUris(tracks) {
+            this.trackUris = tracks.items.map(item => item.track.uri);
+        }
+    };
+
     const discoverWeekly = {
-        get(url) {
-            const accessToken = token.getFromStorage().id;
-            return new Promise(function (resolve, reject) {
-                const req = new XMLHttpRequest();
-                req.open('GET', url);
-                req.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-                req.onload = function () {
-                    if (req.status == 200) {
-                        resolve(JSON.parse(req.response));
-                    } else {
-                        reject(Error(req.statusText));
-                    }
-                };
-
-                req.onerror = function () {
-                    reject(Error("Network Error - - please try again"));
-                };
-
-                req.send();
-            });
+        copy() { // Get all current user's playlists
+            http.get('https://api.spotify.com/v1/me/playlists')
+                .then(this.isAlreadySaved)
+                .then(this.getTracksEndpoint.bind(this))
+                .then(playlist.getTrackUris)
+                .then(() => http.get('https://api.spotify.com/v1/me')) // Get the current user
+                .then(playlist.create)
+                .then(playlist.addTracks)
+                .catch(error => console.log(error.message));
         },
-        post(url, requestBody) {
-            const accessToken = token.getFromStorage().id;
-            return new Promise(function (resolve, reject) {
-                const req = new XMLHttpRequest();
-                req.open('POST', url);
-                req.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-                req.setRequestHeader('Content-Type', 'application/json');
-                req.onload = function () {
-                    if (req.status == 200 || req.status == 201) {
-                        resolve(JSON.parse(req.response));
-                    } else {
-                        reject(new Error(req.statusText));
-                    }
-                };
-                req.onerror = function () {
-                    reject(new Error('Network Error - please try again'));
-                };
-                req.send(JSON.stringify(requestBody));
-            });
-        },
-        copy() {
-            // Get all current user's playlists 
-            this.get('https://api.spotify.com/v1/me/playlists').then(response => {
-                if (this.isAlreadySaved(response)) {
-                    return Promise.reject(new Error('This weeks Discover Weekly playlist has already been saved!'));
-                } else {
-                    const discoverPlaylist = response.items.filter(playlist => playlist.name === 'Discover Weekly')[0];
-                    const url = discoverPlaylist.tracks.href;
-                    // Get al tracks of the Discover playlist    
-                    return this.get(url);
-                }
-            }).then(response => {
-                const discoverTracks = response.items.map(item => item.track.uri);
-                // Get the current user's ID
-                this.get('https://api.spotify.com/v1/me').then(response => {
-                    const currentUsersId = response.id;
-                    const currentWeek = util.getCurrentWeek();
-                    // Create a new playlist for the current user
-                    this.post(`https://api.spotify.com/v1/users/${currentUsersId}/playlists`, {
-                        name: `My Discover Weekly - Week ${currentWeek}`,
-                        public: false
-                    }).then(response => {
-                        const playlistId = response.id;
-                        // Add tracks from the Discover playlist to the newly created playlist            
-                        this.post(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, discoverTracks);
-                        window.location.reload(true);
-                    });
-                });
-            }, error => console.log(error.message));
+        getTracksEndpoint(playlists) {
+            const discoverPlaylist = playlists.items.filter(playlist => playlist.name === 'Discover Weekly')[0];
+            const tracksUrl = discoverPlaylist.tracks.href;
+            return http.get(tracksUrl);
         },
         isAlreadySaved(playlists) {
             const currentWeek = util.getCurrentWeek();
-            return playlists.items.some(playlist => playlist.name === `My Discover Weekly - Week ${currentWeek}`);
+            const isSaved = playlists.items.some(playlist => playlist.name === `My Discover Weekly - Week ${currentWeek}`);
+            return isSaved ? Promise.reject(new Error(`This week's Discover Weekly playlist has already been saved!`)) : playlists;
         }
     };
+   
+    const infoToaster = {
+        create(text) {
+            const container = document.createElement('div');
+            const message = document.createElement('p');
+            const close = document.createElement('span');
+
+            message.textContent = text;
+            container.append(message, close);
+
+            return container;
+        },
+        display(text) {
+
+        },
+        addInitialStyles(toasterContainer) {
+            toasterContainer.style.position = 'absolute';
+            toasterContainer.style.right = '-500px';
+            toasterContainer.style.top = '0px';
+        }
+    };
+
+
 }());

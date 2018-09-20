@@ -26,7 +26,9 @@
 			const accessToken = token.getFromStorage().id;
 			for (const singlePlaylist of playlistsCollection) {
 				const playlistId = playlists.extractId(singlePlaylist);
-				playlists.getDuration(accessToken, playlistId, singlePlaylist);
+				playlists.getDuration(accessToken, playlistId, singlePlaylist)
+					.then((duration, singlePlaylist) => playlists.renderDuration(duration, singlePlaylist))
+					.catch(error => console.log(error.message));
 			}
 		}
 	}
@@ -96,22 +98,31 @@
 			return playlistId;
 		},
 		getDuration(accessToken, playlistId, playlistNode) {
-			const xhr = new XMLHttpRequest(),
-				requestURL = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?fields=items(track(duration_ms))`,
-				self = this;
-			xhr.open('GET', requestURL);
-			xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-			xhr.onreadystatechange = function () {
-				if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-					const playlistDuration = utility.trackTimeAdder(JSON.parse(xhr.responseText));
-					self.renderDuration(playlistDuration, playlistNode);
-				}
-			}
-			xhr.send();
+			return new Promise((resolve, reject) => {
+				const xhr = new XMLHttpRequest(),
+					requestURL = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?fields=items(track(duration_ms))`;
+				xhr.open('GET', requestURL);
+				xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+				xhr.onload = function () {
+					if (xhr.status === 200) {
+						const playlistDuration = utility.trackTimeAdder(JSON.parse(xhr.responseText));
+						resolve({
+							playlistDuration,
+							playlistNode
+						});
+					} else {
+						reject(new Error(xhr.statusText));
+					}
+				};
+				xhr.send();
+			});
 		},
-		renderDuration(playlistDuration, playlistNode) {
+		renderDuration({
+			playlistDuration,
+			playlistNode
+		}) {
 			const playlistDurationFormatted = utility.generateDurationInDisplayFormat(playlistDuration);
 			playlistNode.insertAdjacentHTML('afterend', `<p class='duration-list-duration'>${playlistDurationFormatted}</p>`);
-		},
+		}
 	};
 })();
