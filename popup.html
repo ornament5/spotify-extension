@@ -1,20 +1,57 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <style>
-      button {
-        height: 30px;
-        width: 30px;
-        outline: none;
-        display:block;
-        margin: 0 auto;
-        background-color: #1db954;
-      }
-    </style>
-  </head>
-  <body>
-    <button id="getTotalDuration"></button>
-    <p>Get total duration!</p>
-    <script src="popup.js"></script>
-  </body>
+
+<head>
+	<style>
+		body {
+			width: 20rem;
+		}
+
+		div {
+			display: inline-block;
+			width: 45%;
+			height: 100%;
+			text-align: center;
+			padding: 0.5em;
+		}
+
+		div:nth-of-type(2) {
+			border-left: 1px solid #ccc;
+		}
+		p{
+			margin-top:0;
+		}
+
+		button {
+			height:60px;
+			width: 60px;
+			outline: none;
+			border-radius: 50%;
+			color:black;
+			font-weight: 600;
+			font-size: 1.4rem;
+			border:4px solid black;
+			background-color: transparent;
+		}
+
+		button:hover, button:focus, button:active{
+			color:white;
+			background-color: black;
+		}
+
+	</style>
+</head>
+
+<body>
+	<div>
+		<p>Get total duration for each of your playlists!</p>
+		<button id="total-duration">TD</button>
+	</div>
+	<div>
+		<p>Save your current Discover Weekly playlist!</p>
+		<button id="discover-weekly">DW</button>
+	</div>
+	<script src="popup.js"></script>
+</body>
+
 </html>

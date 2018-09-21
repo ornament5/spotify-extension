@@ -1,39 +1,41 @@
 (function () {
-	window.addEventListener('duration', handler);
-	window.addEventListener('load', handler);
-	chrome.runtime.onMessage.addListener(request => request.message === 'done' && handler());
+	window.addEventListener('duration', init);
+	window.addEventListener('load', init);
+	chrome.runtime.onMessage.addListener(request => request.message === 'tabUpdated' && init());
 
-	function handler() {
-		return utility.urlIncludes('https://open.spotify.com/collection/playlists') && setTimeout(() => extension.init(), 200);
+	function init() {
+		return utility.urlIncludes('https://open.spotify.com/collection/playlists') && setTimeout(() => duration.runWithTokenCheck(), 200);
 	}
 
-	const extension = {
-		init() {
+	const duration = {
+		runWithTokenCheck() {
 			if (token.isActive()) {
-				this.displayDuration();
+				this.display();
 			} else {
 				if (utility.urlIncludes('access_token')) {
 					const tokenObject = token.extract(window.location.href);
 					token.setToStorage(tokenObject);
-					this.displayDuration();
+					this.display();
 				} else {
 					token.request();
 				}
 			}
 		},
-		displayDuration() {
+		display() {
 			const playlistsCollection = document.querySelectorAll('.mo-info-name');
 			const accessToken = token.getFromStorage().id;
 			for (const singlePlaylist of playlistsCollection) {
 				const playlistId = playlists.extractId(singlePlaylist);
-				playlists.getDuration(accessToken, playlistId, singlePlaylist);
+				playlists.getDuration(accessToken, playlistId, singlePlaylist)
+					.then((duration, singlePlaylist) => playlists.renderDuration(duration, singlePlaylist))
+					.catch(error => console.log(error.message));
 			}
 		}
 	}
 
 	const token = {
 		request() {
-			const requestURL = 'https://accounts.spotify.com/authorize?client_id=4033df41b69c46598a007e72e87448a1&redirect_uri=https://open.spotify.com/collection/playlists&scope=playlist-read-private%20playlist-read-collaborative&response_type=token'
+			const requestURL = 'https://accounts.spotify.com/authorize?client_id=4033df41b69c46598a007e72e87448a1&redirect_uri=https://open.spotify.com/collection/playlists&scope=playlist-read-private%20playlist-read-collaborative%20playlist-modify-public%20playlist-modify-private&response_type=token'
 			window.location.href = requestURL;
 		},
 		extract(urlString) {
@@ -96,22 +98,31 @@
 			return playlistId;
 		},
 		getDuration(accessToken, playlistId, playlistNode) {
-			const xhr = new XMLHttpRequest(),
-				requestURL = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?fields=items(track(duration_ms))`,
-				self = this;
-			xhr.open('GET', requestURL);
-			xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-			xhr.onreadystatechange = function () {
-				if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-					const playlistDuration = utility.trackTimeAdder(JSON.parse(xhr.responseText));
-					self.renderDuration(playlistDuration, playlistNode);
-				}
-			}
-			xhr.send();
+			return new Promise((resolve, reject) => {
+				const xhr = new XMLHttpRequest(),
+					requestURL = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?fields=items(track(duration_ms))`;
+				xhr.open('GET', requestURL);
+				xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+				xhr.onload = function () {
+					if (xhr.status === 200) {
+						const playlistDuration = utility.trackTimeAdder(JSON.parse(xhr.responseText));
+						resolve({
+							playlistDuration,
+							playlistNode
+						});
+					} else {
+						reject(new Error(xhr.statusText));
+					}
+				};
+				xhr.send();
+			});
 		},
-		renderDuration(playlistDuration, playlistNode) {
+		renderDuration({
+			playlistDuration,
+			playlistNode
+		}) {
 			const playlistDurationFormatted = utility.generateDurationInDisplayFormat(playlistDuration);
-			playlistNode.insertAdjacentHTML('afterend', `<p class='extension-list-duration'>${playlistDurationFormatted}</p>`);
-		},
+			playlistNode.insertAdjacentHTML('afterend', `<p class='duration-list-duration'>${playlistDurationFormatted}</p>`);
+		}
 	};
 })();

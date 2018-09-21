@@ -1,6 +1,6 @@
 (function () {
     window.addEventListener('load', init);
-    chrome.runtime.onMessage.addListener(request => request.message === 'done' && init());
+    chrome.runtime.onMessage.addListener(request => request.message === 'tabUpdated' && init());
     
     const utility = {
             extractDuration(durationInDisplayFormat) {
