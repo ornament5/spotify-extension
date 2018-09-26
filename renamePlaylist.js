@@ -32,7 +32,6 @@
 //                 xhr.onload = function() {
 //                     if (xhr.status === 200) console.log('fala bogu');
 //                     else console.log(this.responseText);
-
 // }
 //                 xhr.send(JSON.stringify(name));
 
