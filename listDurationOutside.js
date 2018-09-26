@@ -1,6 +1,6 @@
 (function () {
 	window.addEventListener('duration', init);
-	window.addEventListener('load', init);
+	// window.addEventListener('load', init);
 	chrome.runtime.onMessage.addListener(request => request.message === 'tabUpdated' && init());
 
 	function init() {
@@ -23,12 +23,11 @@
 		},
 		display() {
 			const playlistsCollection = document.querySelectorAll('.mo-info-name');
-			const accessToken = token.getFromStorage().id;
-			for (const singlePlaylist of playlistsCollection) {
-				const playlistId = playlists.extractId(singlePlaylist);
-				playlists.getDuration(accessToken, playlistId, singlePlaylist)
-					.then((duration, singlePlaylist) => playlists.renderDuration(duration, singlePlaylist))
-					.catch(error => console.log(error.message));
+			for (const playlistNode of playlistsCollection) {
+				const playlistId = playlists.extractId(playlistNode);
+				playlists.getDuration(playlistId, playlistNode)
+					.then((duration) => playlists.renderDuration(duration))
+					.catch(error => console.log(error));
 			}
 		}
 	}
@@ -97,7 +96,8 @@
 				playlistId = playlistUrl.match(/playlist\/(.+)/)[1];
 			return playlistId;
 		},
-		getDuration(accessToken, playlistId, playlistNode) {
+		getDuration(playlistId, playlistNode) {
+			const accessToken = token.getFromStorage().id;
 			return new Promise((resolve, reject) => {
 				const xhr = new XMLHttpRequest(),
 					requestURL = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?fields=items(track(duration_ms))`;
@@ -121,8 +121,9 @@
 			playlistDuration,
 			playlistNode
 		}) {
+			if (playlistNode.nextElementSibling) return;
 			const playlistDurationFormatted = utility.generateDurationInDisplayFormat(playlistDuration);
-			playlistNode.insertAdjacentHTML('afterend', `<p class='duration-list-duration'>${playlistDurationFormatted}</p>`);
+			playlistNode.insertAdjacentHTML('afterend', `<br><span class='extension-list-duration'>${playlistDurationFormatted}</span>`);
 		}
 	};
 })();
