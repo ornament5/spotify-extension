@@ -1,11 +1,6 @@
 (function () {
     // window.addEventListener('load', duration.init);
-    chrome.runtime.onMessage.addListener(request => {
-        if (request.message === 'runOutside' && document.getElementsByClassName('extension-list-duration').length === 0) {
-            console.log('jaooooo');
-            setTimeout(() => duration.init(), 200)
-        }
-    });
+    chrome.runtime.onMessage.addListener(request => request.message === 'runOutside' && setTimeout(() => duration.init(), 200));
 
     const duration = {
         init() {
@@ -125,7 +120,7 @@
             playlistDuration,
             playlistNode
         }) {
-            if (playlistNode.parentElement.nextElementSibling) return Promise.reject('double');
+            if (playlistNode.parentElement.nextElementSibling) return Promise.reject('Clicked on "Your Library" while already on the page');
             const playlistDurationFormatted = utility.generateDurationInDisplayFormat(playlistDuration);
             playlistNode.parentElement.insertAdjacentHTML('afterend', `<div class='extension-list-duration'><span>${playlistDurationFormatted}</span></div>`);
         }

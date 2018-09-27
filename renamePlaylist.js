@@ -12,36 +12,52 @@
 //     }
 // })
 
-// let playlistDivs = document.getElementsByClassName('media-object');
-// for (let pDiv of playlistDivs) {
-//     if (pDiv.querySelector('[href="/user/ornament5"]')) {
-//         let pDur = pDiv.getElementsByClassName('extension-list-duration')[0];
-//         pDur.insertAdjacentHTML('afterend', '<span class="extension-rename-playlist" title="Rename playlist">&#xF1E2;</span>');
-//         let pen = document.getElementsByClassName('extension-rename-playlist')[0];
-//         pen.style.fontFamily = 'glue1-spoticon';
-//     }
-// }
 (function () {
     window.addEventListener('durationRendered', init);
 
     function init(e) {
         currUser.getId()
-            .then((userId) => renderGlyphicon(userId, e.message));
+            .then((userId) => renderGlyphicon(userId, e.message))
+            .then((glyphicon) => glyphicon.addEventListener('click', handler))
+            .catch();
     }
 
     function renderGlyphicon(currentUser, playlistId) {
         const mainContainer = document.querySelector('.main-view-container');
         const playlistAnchor = mainContainer.querySelector(`[href='/playlist/${playlistId}']`);
         const playlistNode = playlistAnchor.closest('.media-object');
-
         if (playlistNode.querySelector(`[href='/user/${currentUser}']`)) {
             const duration = playlistNode.getElementsByClassName('extension-list-duration')[0];
             duration.insertAdjacentHTML('beforeend', '<a href= ""> <span class="extension-rename-playlist" title="Rename playlist"> &#xF1E2;</span></a>');
             const glyphiconNode = playlistNode.getElementsByClassName('extension-rename-playlist')[0];
             glyphiconNode.style.fontFamily = 'glue1-spoticon';
-        }
+            return Promise.resolve(glyphiconNode);
+        } else return Promise.reject('Not allowed to rename this playlist');
     }
 
+    function handler(event) {
+        event.preventDefault();
+        const playlistAnchor = event.target.closest('.mo-info').querySelector('.mo-info-name');
+        const playlistId = playlistAnchor.href.match(/playlist\/(.+)/)[1];
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.placeholder = playlistAnchor.textContent;
+        textInput.style.color = 'black';
+        playlistAnchor.replaceWith(textInput);
+        textInput.focus();
+        textInput.onblur = () => textInput.replaceWith(playlistAnchor);
+        document.addEventListener('keydown', (event) => {
+            console.log(event.key);
+            if (event.key === 'Enter') {
+                playlistAnchor.textContent = textInput.value;
+                textInput.replaceWith(playlistAnchor);
+                http.put({name:textInput.value}, playlistId)
+                    .catch(console.log);
+            } else if (event.key === 'Escape') {
+                textInput.replaceWith(playlistAnchor);
+            }
+        })
+    }
 
     const currUser = {
         getId() {

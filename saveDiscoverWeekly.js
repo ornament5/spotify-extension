@@ -121,7 +121,7 @@
             const currentWeek = util.getCurrentWeek();
             const options = {
                 name: `My Discover Weekly - Week ${currentWeek}`,
-                public: false
+                public: true
             };
             return http.post(`https://api.spotify.com/v1/users/${currentUsersId}/playlists`, options);
         },
