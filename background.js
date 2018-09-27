@@ -10,5 +10,11 @@ chrome.runtime.onInstalled.addListener(() =>{
        }]);
     });
 });
-chrome.tabs.onUpdated.addListener((tabId, change) => change.status === 'complete' &&
-        chrome.tabs.sendMessage(tabId, { message: 'tabUpdated' }));
+chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
+    console.log(tab.status);
+    if (tab.status === 'complete') {
+        tab.url.includes('https://open.spotify.com/collection/playlists') ?  chrome.tabs.sendMessage(tabId, { message: 'runOutside' }) :
+        /show|album|(playlist\b)/.test(tab.url) ? chrome.tabs.sendMessage(tabId, { message: 'runInside' }) :
+        console.log('nada');
+    } 
+});
