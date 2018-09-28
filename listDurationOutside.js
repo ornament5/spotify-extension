@@ -4,15 +4,19 @@
 
     const duration = {
         init() {
-            if (token.isActive()) {
-                this.display();
+            if (document.querySelector('.extension-list-duration')) {
+                return;
             } else {
-                if (window.location.href.includes('access_token')) {
-                    const tokenObject = token.extract(window.location.href);
-                    token.setToStorage(tokenObject);
+                if (token.isActive()) {
                     this.display();
                 } else {
-                    token.request();
+                    if (window.location.href.includes('access_token')) {
+                        const tokenObject = token.extract(window.location.href);
+                        token.setToStorage(tokenObject);
+                        this.display();
+                    } else {
+                        token.request();
+                    }
                 }
             }
         },
@@ -21,11 +25,11 @@
             for (const playlistNode of playlistsCollection) {
                 const playlistId = playlists.extractId(playlistNode);
                 playlists.getDuration(playlistId, playlistNode)
-					.then((duration) => playlists.renderDuration(duration))
-					.then(()=> utility.sendCustomEvent('durationRendered', `${playlistId}`))
+                    .then((duration) => playlists.renderDuration(duration))
+                    .then(() => utility.sendEvent('durationRendered', `${playlistId}`))
                     .catch(error => console.log(error));
             }
-            
+
         }
     }
 
@@ -81,12 +85,12 @@
         },
         padWithZero(timeUnit) {
             return timeUnit < 10 ? `0${timeUnit}` : `${timeUnit}`;
-		},
-		sendCustomEvent(eventType, message) {
-			const event = new CustomEvent(eventType);
+        },
+        sendEvent(eventType, message) {
+            const event = new CustomEvent(eventType);
             event.message = message;
-			dispatchEvent(event);
-		}
+            dispatchEvent(event);
+        }
     };
 
     const playlists = {
@@ -120,7 +124,6 @@
             playlistDuration,
             playlistNode
         }) {
-            if (playlistNode.parentElement.nextElementSibling) return Promise.reject('Clicked on "Your Library" while already on the page');
             const playlistDurationFormatted = utility.generateDurationInDisplayFormat(playlistDuration);
             playlistNode.parentElement.insertAdjacentHTML('afterend', `<div class='extension-list-duration'><span>${playlistDurationFormatted}</span></div>`);
         }
