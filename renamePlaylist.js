@@ -2,8 +2,8 @@
     window.addEventListener('durationRendered', init);
 
     function init(e) {
-        currUser.getId()
-            .then((userId) => renderGlyphicon(userId, e.message))
+        const {playlistId, userId} = e.message;
+        renderGlyphicon(userId, playlistId)
             .then((glyphicon) => glyphicon && glyphicon.addEventListener('click', rename))
     }
 
@@ -18,7 +18,10 @@
             glyphiconNode.style.fontFamily = 'glue1-spoticon';
             glyphiconNode.style.marginLeft = '4px';
             return Promise.resolve(glyphiconNode);
-        } 
+        }
+        else {
+            return Promise.resolve();
+        }
     }
 
     function rename(event) {
@@ -45,13 +48,6 @@
             }
         })
     }
-
-    const currUser = {
-        getId() {
-            return http.get('https://api.spotify.com/v1/me')
-                .then(user => user.id);
-        }
-    };
 
     const http = {
         get(url) {

@@ -22,14 +22,15 @@
         },
         display() {
             const playlistsCollection = document.querySelectorAll('.mo-info-name');
-            for (const playlistNode of playlistsCollection) {
-                const playlistId = playlists.extractId(playlistNode);
-                playlists.getDuration(playlistId, playlistNode)
-                    .then((duration) => playlists.renderDuration(duration))
-                    .then(() => utility.sendEvent('durationRendered', `${playlistId}`))
-                    .catch(error => console.log(error));
-            }
-
+            playlists.getCurrentUser().then((userId) => {
+                for (const playlistNode of playlistsCollection) {
+                    const playlistId = playlists.extractId(playlistNode);
+                    playlists.getDuration(playlistId, playlistNode)
+                        .then((duration) => playlists.renderDuration(duration))
+                        .then(() => utility.sendEvent('durationRendered', {playlistId, userId}))
+                        .catch(error => console.log(error));
+                }
+            })
         }
     }
 
@@ -90,6 +91,25 @@
             const event = new CustomEvent(eventType);
             event.message = message;
             dispatchEvent(event);
+        },
+        httpGet(url){
+            const accessToken = token.getFromStorage().id;
+            return new Promise(function (resolve, reject) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url);
+                xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+                xhr.onload = function () {
+                    if (xhr.status == 200) {
+                        resolve(JSON.parse(xhr.response));
+                    } else {
+                        reject(new Error(xhr.status));
+                    }
+                };
+                xhr.onerror = function () {
+                    reject(new Error("Network Error - please try again"));
+                };
+                xhr.send();
+            });
         }
     };
 
@@ -100,25 +120,14 @@
             return playlistId;
         },
         getDuration(playlistId, playlistNode) {
-            const accessToken = token.getFromStorage().id;
-            return new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest(),
-                    requestURL = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?fields=items(track(duration_ms))`;
-                xhr.open('GET', requestURL);
-                xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-                xhr.onload = function () {
-                    if (xhr.status === 200) {
-                        const playlistDuration = utility.trackTimeAdder(JSON.parse(xhr.responseText));
-                        resolve({
-                            playlistDuration,
-                            playlistNode
-                        });
-                    } else {
-                        reject(new Error(xhr.statusText));
+            return utility.httpGet(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?fields=items(track(duration_ms))`)
+                .then(duration => {
+                    const playlistDuration = utility.trackTimeAdder(duration);
+                    return {
+                        playlistDuration,
+                        playlistNode
                     }
-                };
-                xhr.send();
-            });
+                });
         },
         renderDuration({
             playlistDuration,
@@ -126,6 +135,10 @@
         }) {
             const playlistDurationFormatted = utility.generateDurationInDisplayFormat(playlistDuration);
             playlistNode.parentElement.insertAdjacentHTML('afterend', `<div class='extension-list-duration'><span>${playlistDurationFormatted}</span></div>`);
+        },
+        getCurrentUser(){
+            return utility.httpGet('https://api.spotify.com/v1/me').then(user => user.id);
         }
+
     };
 })();
