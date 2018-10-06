@@ -25,7 +25,7 @@
             return timeUnit < 10 ? `0${timeUnit}` : `${timeUnit}`;
         },
         isDomReady() {
-            return document.querySelector('.text-silence') && document.querySelectorAll('.tracklist-duration span').length;
+            return document.querySelector('.TrackListHeader__text-silence') && document.querySelectorAll('.tracklist-duration span').length;
         },
         isPathnameSuitable(regexp) {
             return regexp.test(window.location.pathname);
@@ -43,7 +43,7 @@
             durationParagraph = document.getElementById('extension-list-duration') || document.createElement('p');
         durationParagraph.id = durationParagraph.id || 'extension-list-duration';
         durationParagraph.textContent = durationText;
-        document.querySelector('.text-silence').after(durationParagraph);
+        document.querySelector('.TrackListHeader__text-silence').after(durationParagraph);
     }
 
 })();
