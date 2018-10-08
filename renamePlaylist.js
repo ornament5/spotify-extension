@@ -36,6 +36,7 @@
 
         playlistAnchor.replaceWith(textInput);
         textInput.focus();
+        textInput.select();
 
         textInput.onblur = () => textInput.replaceWith(playlistAnchor);
         document.addEventListener('keyup', (event) => {
