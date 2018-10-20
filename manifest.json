@@ -4,12 +4,11 @@
   "version": "1.0",
   "permissions": ["declarativeContent", "activeTab", "tabs"],
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "scripts": ["background.js"]
   },
   "content_scripts": [{
     "matches": ["https://open.spotify.com/*"],
-    "js": ["listDurationInside.js","listDurationOutside.js","saveDiscoverWeekly.js"]
+    "js": ["listDurationOutside.js","renamePlaylist.js","listDurationInside.js","saveDiscoverWeekly.js"]
   }
 ],
   "page_action": {

@@ -121,7 +121,7 @@
             const currentWeek = util.getCurrentWeek();
             const options = {
                 name: `My Discover Weekly - Week ${currentWeek}`,
-                public: false
+                public: true
             };
             return http.post(`https://api.spotify.com/v1/users/${currentUsersId}/playlists`, options);
         },
@@ -136,6 +136,8 @@
     };
 
     const discoverWeekly = {
+        translations: ['Discover Weekly','Descubrimiento Semanal','Descobertas da Semana','Découvertes de la semaine','Dein Mix der Woche','Viikon suositukset',
+                       'E Heti Kaland','Odkryj w tym tygodniu','Haftalık Keşifler','每週新發現'],
         copy() { // Get all current user's playlists
             http.get('https://api.spotify.com/v1/me/playlists')
                 .then(this.isAlreadySaved)
@@ -147,7 +149,7 @@
                 .catch(error => infoToaster.show(error.message));
         },
         getTracksEndpoint(playlists) {
-            const discoverPlaylist = playlists.items.filter(playlist => playlist.name === 'Discover Weekly')[0];
+            const discoverPlaylist = playlists.items.filter(playlist => discoverWeekly.translations.includes(playlist.name))[0];
             const tracksUrl = discoverPlaylist.tracks.href;
             return http.get(tracksUrl);
         },
