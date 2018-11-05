@@ -8,7 +8,7 @@
     }
 
     function renderGlyphicon(currentUser, playlistId) {
-        const mainContainer = document.querySelector('.main-view-container');
+        const mainContainer = document.querySelector('.main-view-container__content');
         const playlistAnchor = mainContainer.querySelector(`[href='/playlist/${playlistId}']`);
         const playlistNode = playlistAnchor.closest('.media-object');
         if (playlistNode.querySelector(`[href='/user/${currentUser}']`)) {
