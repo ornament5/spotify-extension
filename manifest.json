@@ -2,17 +2,17 @@
   "name": "Spotify Extension",
   "description": "Extend the functionality of the Spotify web app",
   "version": "1.0",
-  "permissions": ["declarativeContent", "activeTab", "tabs"],
+  "permissions": ["declarativeContent", "activeTab", "tabs", "scripting"],
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "content_scripts": [{
     "matches": ["https://open.spotify.com/*"],
     "js": ["listDurationOutside.js","renamePlaylist.js","listDurationInside.js","saveDiscoverWeekly.js"]
   }
 ],
-  "page_action": {
+  "action": {
     "default_popup": "popup.html"
   },
-  "manifest_version": 2
+  "manifest_version": 3
 }

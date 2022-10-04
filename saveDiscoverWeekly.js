@@ -34,11 +34,21 @@
         isInitiatedByUser() {
             return !!localStorage.getItem('initiatedByUser');
         },
+
         getCurrentWeek() {
-            const now = new Date();
-            const yearStart = new Date(now.getFullYear(), 0);
-            const msInWeek = 1000 * 60 * 60 * 24 * 7;
-            return Math.ceil((now - yearStart) / msInWeek);
+                            // Returns the ISO week of the date.
+            Date.prototype.getWeek = function() {
+                const date = new Date(this.getTime());
+                date.setHours(0, 0, 0, 0);
+            // Thursday in current week decides the year.
+                date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            // January 4 is always in week 1.
+                const week1 = new Date(date.getFullYear(), 0, 4);
+            // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+                return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+                                            - 3 + (week1.getDay() + 6) % 7) / 7);
+            }
+            return new Date().getWeek();
         }
     };
 
@@ -120,7 +130,7 @@
             const currentUsersId = user.id;
             const currentWeek = util.getCurrentWeek();
             const options = {
-                name: `My Discover Weekly - Week ${currentWeek}`,
+                name: `My Discover Weekly - Week ${currentWeek}/${new Date().getFullYear()}`,
                 public: true
             };
             return http.post(`https://api.spotify.com/v1/users/${currentUsersId}/playlists`, options);
@@ -146,7 +156,7 @@
                 .then(() => http.get('https://api.spotify.com/v1/me')) // Get the current user
                 .then(playlist.create)
                 .then(playlist.addTracks)
-                .catch(error => infoToaster.show(error.message));
+                .catch(error => alert(error.message));
         },
         getTracksEndpoint(playlists) {
             const discoverPlaylist = playlists.items.filter(playlist => discoverWeekly.translations.includes(playlist.name))[0];
@@ -155,8 +165,8 @@
         },
         isAlreadySaved(playlists) {
             const currentWeek = util.getCurrentWeek();
-            const isSaved = playlists.items.some(playlist => playlist.name === `My Discover Weekly - Week ${currentWeek}`);
-            return isSaved ? Promise.reject(new Error(`This week's Discover Weekly playlist has already been saved!`)) : playlists;
+            const isSaved = playlists.items.some(playlist => playlist.name === `My Discover Weekly - Week ${currentWeek}/${new Date().getFullYear()}`);
+               return isSaved ? Promise.reject(new Error(`This week's Discover Weekly playlist has already been saved!`)) : playlists;
         }
     };
    
@@ -181,7 +191,7 @@
             const paragraphStyles = `margin:0 auto;
                                     position:absolute;
                                     top:50%;
-                                    transform:translateY(-50%);`;
+                                    `;
 
           toasterContainer.setAttribute('style', containerStyles);
           toasterContainer.firstElementChild.setAttribute('style', paragraphStyles);
@@ -190,11 +200,12 @@
         show(text) {
             const toaster = this.addStyles(this.create(text));
             const body = document.body;
-            body.appendChild(toaster);
-            
+            body.appendChild(toaster);            
             setTimeout(() => toaster.style.right = '1.5vw', 0);
             setTimeout(() => toaster.style.right = '-50vw', 3000);
         },
     };
 }());
 
+
+// transform:translateY(-50%);

@@ -21,7 +21,7 @@
             }
         },
         display() {
-            const playlistsCollection = document.querySelectorAll('.mo-info-name');
+            const playlistsCollection = document.querySelectorAll('.Root__main-view div>a[href^="/playlist/"]');
             playlists.getCurrentUser().then((userId) => {
                 for (const playlistNode of playlistsCollection) {
                     const playlistId = playlists.extractId(playlistNode);

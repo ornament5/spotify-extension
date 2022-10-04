@@ -8,15 +8,13 @@
     }
 
     function renderGlyphicon(currentUser, playlistId) {
-        const mainContainer = document.querySelector('.main-view-container__content');
+        const mainContainer = document.querySelector('.contentSpacing');
         const playlistAnchor = mainContainer.querySelector(`[href='/playlist/${playlistId}']`);
-        const playlistNode = playlistAnchor.closest('.media-object');
-        if (playlistNode.querySelector(`[href='/user/${currentUser}']`)) {
-            const duration = playlistNode.getElementsByClassName('extension-list-duration')[0];
-            duration.insertAdjacentHTML('beforeend', '<span class="extension-rename-playlist" title="Rename playlist"><a href="#">&#xF1E2;</a></span>');
-            const glyphiconNode = playlistNode.getElementsByClassName('extension-rename-playlist')[0];
-            glyphiconNode.style.fontFamily = 'glue1-spoticon';
-            glyphiconNode.style.marginLeft = '4px';
+        const playlistUser = playlistAnchor.nextElementSibling.firstElementChild ? playlistAnchor.nextElementSibling.firstElementChild.textContent: "";
+        if (playlistUser.includes(currentUser)) {
+            const penSymbol = '<svg role="img" height="14" width="14" aria-hidden="true" viewBox="0 0 24 24" class="Svg-ytk21e-0 jAKAlG"><path d="M17.318 1.975a3.329 3.329 0 114.707 4.707L8.451 20.256c-.49.49-1.082.867-1.735 1.103L2.34 22.94a1 1 0 01-1.28-1.28l1.581-4.376a4.726 4.726 0 011.103-1.735L17.318 1.975zm3.293 1.414a1.329 1.329 0 00-1.88 0L5.159 16.963c-.283.283-.5.624-.636 1l-.857 2.372 2.371-.857a2.726 2.726 0 001.001-.636L20.611 5.268a1.329 1.329 0 000-1.879z"></path></svg>'
+            playlistAnchor.insertAdjacentHTML('afterend', `<span class="extension-rename-playlist" title="Rename playlist"><a href="#">${penSymbol}</a></span>`);
+            const glyphiconNode = playlistAnchor.nextElementSibling.firstElementChild;
             return Promise.resolve(glyphiconNode);
         }
         else {
@@ -26,7 +24,8 @@
 
     function rename(event) {
         event.preventDefault();
-        const playlistAnchor = event.target.closest('.mo-info').querySelector('.mo-info-name');
+        console.log(event.target)
+        const playlistAnchor = event.target.parentElement.parentElement.previousElementSibling;
         const playlistId = playlistAnchor.href.match(/playlist\/(.+)/)[1];
 
         const textInput = document.createElement('input');
